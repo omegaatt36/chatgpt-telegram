@@ -20,7 +20,7 @@ func (c *gptClient) Stream(ctx context.Context, question string) (chan string, c
 		err := c.CompletionStreamWithEngine(ctx,
 			gpt3.TextDavinci003Engine, gpt3.CompletionRequest{
 				Prompt:      []string{question},
-				MaxTokens:   gpt3.IntPtr(300),
+				MaxTokens:   gpt3.IntPtr(config.maxToken),
 				Temperature: gpt3.Float32Ptr(0),
 			}, func(resp *gpt3.CompletionResponse) {
 				res <- resp.Choices[0].Text

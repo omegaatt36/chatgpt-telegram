@@ -16,6 +16,7 @@ import (
 var config struct {
 	telegramBotToken string
 	apiKey           string
+	maxToken         int
 }
 
 // Main starts process in cli.
@@ -102,6 +103,13 @@ func main() {
 			EnvVars:     []string{"TELEGRAM_BOT_TOKEN"},
 			Destination: &config.telegramBotToken,
 			Required:    true,
+		},
+		&cli.IntFlag{
+			Name:        "chatgpt-max-token",
+			EnvVars:     []string{"CHATGPT_MAX_TOKEN"},
+			Destination: &config.maxToken,
+			DefaultText: "3000",
+			Value:       3000,
 		},
 	)
 
