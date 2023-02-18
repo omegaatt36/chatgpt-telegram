@@ -8,6 +8,7 @@ import (
 
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/omegaatt36/chatgpt-telegram/app"
+	"github.com/omegaatt36/chatgpt-telegram/appmodule/chatgpt"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/telebot.v3"
 )
@@ -28,33 +29,58 @@ func Main(ctx context.Context) {
 		return
 	}
 
-	client := gpt3.NewClient(config.apiKey)
+	b := telegramBot{bot: bot, editInterval: 500 * time.Millisecond}
+
+	source := gptClient{gpt3.NewClient(config.apiKey)}
+	// source := fakeClient{}
+	client := chatgpt.NewClient(&source)
 
 	bot.Handle(telebot.OnText, func(c telebot.Context) error {
 		if utf8.RuneCountInString(c.Message().Text) == 0 {
 			return nil
 		}
 
-		var res string
-		err := client.CompletionStreamWithEngine(ctx, gpt3.TextDavinci003Engine, gpt3.CompletionRequest{
-			Prompt:      []string{c.Message().Text},
-			MaxTokens:   gpt3.IntPtr(3000),
-			Temperature: gpt3.Float32Ptr(0),
-		}, func(resp *gpt3.CompletionResponse) {
-			res += resp.Choices[0].Text
-		})
-		if err != nil {
-			if ierr := c.Send(err.Error()); err != nil {
-				log.Println(ierr)
+		log.Printf("start user(%d) prompt(%s)\n", c.Message().Chat.ID, c.Message().Text)
+		defer func() { log.Println("done", c.Message().Text) }()
+
+		messageCh, errCh := client.Stream(ctx, c.Message().Text)
+
+		done := make(chan struct{}, 1)
+		go func() {
+			if err := b.SendAsLiveOutput(c.Message().Chat.ID, messageCh); err != nil {
+				log.Println(err)
+			}
+			done <- struct{}{}
+		}()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-done:
+				return nil
+			case err, ok := <-errCh:
+				if !ok {
+					return nil
+				}
+				if err == nil {
+					continue
+				}
+
+				if e := c.Send(err); e != nil {
+					log.Fatal(err)
+				}
+
+				return nil
 			}
 		}
-
-		return c.Send(res)
 	})
 
+	log.Println("starting telegram bot")
 	go func() {
 		bot.Start()
 	}()
+
 	<-ctx.Done()
 }
 
