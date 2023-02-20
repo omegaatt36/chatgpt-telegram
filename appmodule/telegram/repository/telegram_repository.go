@@ -36,23 +36,13 @@ func ensureFormatting(text string) string {
 
 // SendAsLiveOutput sends message as live output.
 func (b *TelegramBot) SendAsLiveOutput(chatID int64, feed <-chan string) error {
-	var message *telebot.Message
-	var lastResp, tmpResp string
-	var done bool
+	var (
+		sent     *telebot.Message
+		lastResp string
+		m        = message{feed: feed}
+	)
 
-	// aggregate message
-	go func() {
-		for {
-			s, ok := <-feed
-			tmpResp += s
-			if !ok {
-				done = true
-				return
-			}
-		}
-	}()
-
-	chat := &telebot.Chat{ID: chatID}
+	m.aggregate()
 
 	send := func(register string) error {
 		defer func() {
@@ -64,35 +54,39 @@ func (b *TelegramBot) SendAsLiveOutput(chatID int64, feed <-chan string) error {
 			return nil
 		}
 
-		if message == nil {
+		if sent == nil {
 			var err error
-			if message, err = b.bot.Send(chat, register); err != nil {
-				return err
-			}
-		} else {
-			if register == lastResp {
-				return nil
-			}
 
-			text := ensureFormatting(register)
-			if _, err := b.bot.Edit(message, text); err != nil {
-				return err
-			}
+			sent, err = b.bot.Send(&telebot.Chat{ID: chatID}, register)
+			return err
+		}
+
+		if register == lastResp {
+			return nil
+		}
+
+		text := ensureFormatting(register)
+		if _, err := b.bot.Edit(sent, text); err != nil {
+			return err
 		}
 
 		return nil
 	}
 
 	for {
-		if done {
-			return send(tmpResp)
+		select {
+		case <-m.done:
+			return send(m.str)
+		default:
 		}
 
-		if tmpResp == "" {
+		register := m.str
+
+		if register == "" {
 			continue
 		}
 
-		if err := send(tmpResp); err != nil {
+		if err := send(register); err != nil {
 			return err
 		}
 	}
