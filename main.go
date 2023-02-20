@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/PullRequestInc/go-gpt3"
@@ -18,6 +19,7 @@ var config struct {
 	telegramBotToken string
 	apiKey           string
 	maxToken         int
+	timeout          int
 }
 
 // Main starts process in cli.
@@ -31,10 +33,18 @@ func Main(ctx context.Context) {
 		return
 	}
 
+	client := gpt3.NewClient(
+		config.apiKey,
+		gpt3.WithHTTPClient(
+			&http.Client{
+				Timeout: time.Duration(time.Duration(config.timeout) * time.Second),
+			},
+		))
+
 	service := chatgpttelegram.NewService(
 		bot,
 		telegram.NewTelegramBot(bot),
-		chatgpt.NewChatGPTClient(gpt3.NewClient(config.apiKey), config.maxToken),
+		chatgpt.NewChatGPTClient(client, config.maxToken),
 	)
 
 	service.Start(ctx)
@@ -67,6 +77,13 @@ func main() {
 			Destination: &config.maxToken,
 			DefaultText: "3000",
 			Value:       3000,
+		},
+		&cli.IntFlag{
+			Name:        "chatgpt-timeout",
+			EnvVars:     []string{"CHATGPT_TIMEOUT"},
+			Destination: &config.timeout,
+			DefaultText: "60",
+			Value:       60,
 		},
 	)
 
