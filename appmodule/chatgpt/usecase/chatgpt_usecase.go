@@ -4,6 +4,7 @@ package usecase
 
 import "context"
 
+// ChatGPTUseCase defines ChatGPT send question use case.
 type ChatGPTUseCase interface {
 	Stream(ctx context.Context, question string) (<-chan string, <-chan error)
 }

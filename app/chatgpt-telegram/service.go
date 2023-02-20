@@ -10,6 +10,7 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
+// Service is ChatGPT agent via telegram bot.
 type Service struct {
 	ctx context.Context
 
@@ -18,9 +19,7 @@ type Service struct {
 	gpt      chatgpt.ChatGPTUseCase
 }
 
-type Confit struct {
-}
-
+// NewService return Service with use cases.
 func NewService(bot *telebot.Bot, tu telegram.TelegramUseCase, cu chatgpt.ChatGPTUseCase) *Service {
 	return &Service{
 		bot:      bot,
@@ -33,6 +32,7 @@ func (s *Service) registerEndpoint() {
 	s.bot.Handle(telebot.OnText, s.chatGPTQuestion)
 }
 
+// Start starts telegram bot service with context, and register stop event.
 func (s *Service) Start(ctx context.Context) {
 	s.ctx = ctx
 

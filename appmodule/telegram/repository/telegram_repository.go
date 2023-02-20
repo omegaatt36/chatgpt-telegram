@@ -14,6 +14,7 @@ type telegramBot struct {
 
 var _ usecase.TelegramUseCase = &telegramBot{}
 
+// NewTelegramBot returns implement of usecase.TelegramUseCase.
 func NewTelegramBot(bot *telebot.Bot) *telegramBot {
 	return &telegramBot{bot: bot}
 }

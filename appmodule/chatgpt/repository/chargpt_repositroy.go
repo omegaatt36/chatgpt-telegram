@@ -15,6 +15,7 @@ type chatGPTClient struct {
 
 var _ usecase.ChatGPTUseCase = &chatGPTClient{}
 
+// NewChatGPTClient returns implement of usecase.ChatGPTUseCase.
 func NewChatGPTClient(client gpt3.Client, maxToken int) *chatGPTClient {
 	return &chatGPTClient{
 		client:   client,
