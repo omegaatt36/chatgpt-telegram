@@ -7,23 +7,25 @@ import (
 	"github.com/omegaatt36/chatgpt-telegram/appmodule/chatgpt/usecase"
 )
 
-type chatGPTClient struct {
+// ChatGPTClient is implement of usecase.ChatGPTUseCase.
+type ChatGPTClient struct {
 	client gpt3.Client
 
 	maxToken int
 }
 
-var _ usecase.ChatGPTUseCase = &chatGPTClient{}
+var _ usecase.ChatGPTUseCase = &ChatGPTClient{}
 
 // NewChatGPTClient returns implement of usecase.ChatGPTUseCase.
-func NewChatGPTClient(client gpt3.Client, maxToken int) *chatGPTClient {
-	return &chatGPTClient{
+func NewChatGPTClient(client gpt3.Client, maxToken int) *ChatGPTClient {
+	return &ChatGPTClient{
 		client:   client,
 		maxToken: maxToken,
 	}
 }
 
-func (c *chatGPTClient) Stream(ctx context.Context, question string) (<-chan string, <-chan error) {
+// Stream asks ChatGPT the question and receives answer.
+func (c *ChatGPTClient) Stream(ctx context.Context, question string) (<-chan string, <-chan error) {
 	res := make(chan string)
 	errCh := make(chan error)
 	go func() {

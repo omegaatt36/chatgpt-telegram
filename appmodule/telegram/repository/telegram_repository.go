@@ -8,15 +8,16 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-type telegramBot struct {
+// TelegramBot is implement of usecase.TelegramUseCase.
+type TelegramBot struct {
 	bot *telebot.Bot
 }
 
-var _ usecase.TelegramUseCase = &telegramBot{}
+var _ usecase.TelegramUseCase = &TelegramBot{}
 
 // NewTelegramBot returns implement of usecase.TelegramUseCase.
-func NewTelegramBot(bot *telebot.Bot) *telegramBot {
-	return &telegramBot{bot: bot}
+func NewTelegramBot(bot *telebot.Bot) *TelegramBot {
+	return &TelegramBot{bot: bot}
 }
 
 func ensureFormatting(text string) string {
@@ -33,7 +34,8 @@ func ensureFormatting(text string) string {
 	return text
 }
 
-func (b *telegramBot) SendAsLiveOutput(chatID int64, feed <-chan string) error {
+// SendAsLiveOutput sends message as live output.
+func (b *TelegramBot) SendAsLiveOutput(chatID int64, feed <-chan string) error {
 	var message *telebot.Message
 	var lastResp, tmpResp string
 	var done bool
