@@ -1,16 +1,21 @@
-package main
+package repository
 
 import (
-	"log"
 	"strings"
 	"time"
 
+	"github.com/omegaatt36/chatgpt-telegram/appmodule/telegram/usecase"
 	"gopkg.in/telebot.v3"
 )
 
 type telegramBot struct {
-	bot          *telebot.Bot
-	editInterval time.Duration
+	bot *telebot.Bot
+}
+
+var _ usecase.TelegramUseCase = &telegramBot{}
+
+func NewTelegramBot(bot *telebot.Bot) *telegramBot {
+	return &telegramBot{bot: bot}
 }
 
 func ensureFormatting(text string) string {
@@ -27,7 +32,7 @@ func ensureFormatting(text string) string {
 	return text
 }
 
-func (b *telegramBot) SendAsLiveOutput(chatID int64, feed chan string) error {
+func (b *telegramBot) SendAsLiveOutput(chatID int64, feed <-chan string) error {
 	var message *telebot.Message
 	var lastResp, tmpResp string
 	var done bool
@@ -43,8 +48,6 @@ func (b *telegramBot) SendAsLiveOutput(chatID int64, feed chan string) error {
 			}
 		}
 	}()
-
-	defer func() { log.Println("SendAsLiveOutput done") }()
 
 	chat := &telebot.Chat{ID: chatID}
 
