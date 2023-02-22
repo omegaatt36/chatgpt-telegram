@@ -29,6 +29,7 @@ func NewService(bot *telebot.Bot, tu telegram.TelegramUseCase, cu chatgpt.ChatGP
 }
 
 func (s *Service) registerEndpoint() {
+	s.bot.Handle("/start", s.handleStart)
 	s.bot.Handle(telebot.OnText, s.chatGPTQuestion)
 }
 
@@ -110,4 +111,8 @@ func (s *Service) chatGPTQuestion(c telebot.Context) error {
 	}
 
 	return err
+}
+
+func (s *Service) handleStart(c telebot.Context) error {
+	return c.Send("wellcome to use ChatGPT agent, please ask me something.")
 }
