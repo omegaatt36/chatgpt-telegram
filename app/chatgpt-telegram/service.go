@@ -8,11 +8,14 @@ import (
 	chatgpt "github.com/omegaatt36/chatgpt-telegram/appmodule/chatgpt/usecase"
 	telegram "github.com/omegaatt36/chatgpt-telegram/appmodule/telegram/usecase"
 	"gopkg.in/telebot.v3"
+	"gopkg.in/telebot.v3/middleware"
 )
 
 // Service is ChatGPT agent via telegram bot.
 type Service struct {
 	ctx context.Context
+
+	allowedUsers []int64
 
 	bot      *telebot.Bot
 	telegram telegram.TelegramUseCase
@@ -33,10 +36,17 @@ func (s *Service) registerEndpoint() {
 	s.bot.Handle(telebot.OnText, s.chatGPTQuestion)
 }
 
+func (s *Service) useMiddleware() {
+	if len(s.allowedUsers) != 0 {
+		s.bot.Use(middleware.Whitelist(s.allowedUsers...))
+	}
+}
+
 // Start starts telegram bot service with context, and register stop event.
-func (s *Service) Start(ctx context.Context) {
+func (s *Service) Start(ctx context.Context, configs ...config) {
 	s.ctx = ctx
 
+	s.useMiddleware()
 	s.registerEndpoint()
 
 	go func() {

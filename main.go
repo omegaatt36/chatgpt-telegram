@@ -20,6 +20,7 @@ var config struct {
 	apiKey           string
 	maxToken         int
 	timeout          int
+	allowedUsers     []int64
 }
 
 // Main starts process in cli.
@@ -47,7 +48,9 @@ func Main(ctx context.Context) {
 		chatgpt.NewChatGPTClient(client, config.maxToken),
 	)
 
-	service.Start(ctx)
+	service.Start(ctx,
+		chatgpttelegram.UseAllowedUsers{AllowedUsers: config.allowedUsers},
+	)
 	<-ctx.Done()
 	log.Println("app stopping")
 }
@@ -84,6 +87,14 @@ func main() {
 			Destination: &config.timeout,
 			DefaultText: "60",
 			Value:       60,
+		},
+		&cli.MultiInt64Flag{
+			Target: &cli.Int64SliceFlag{
+				Name:    "allowed-users",
+				EnvVars: []string{"ALLOWED_USERS"},
+			},
+			Value:       []int64{},
+			Destination: &config.allowedUsers,
 		},
 	)
 
