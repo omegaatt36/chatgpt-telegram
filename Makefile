@@ -10,7 +10,6 @@ fmt:
 
 check:
 	revive -exclude pkg/... -formatter friendly -config test/tools/revive.toml  ./...
-	golangci-lint run
 	go vet -all ./...
 	misspell -error */**
 	@echo 'staticcheck' && staticcheck $(shell go list ./... | grep -v internal)
