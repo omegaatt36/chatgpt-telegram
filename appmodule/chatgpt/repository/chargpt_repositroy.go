@@ -12,16 +12,24 @@ type ChatGPTClient struct {
 	client gpt3.Client
 
 	maxToken int
+	engine   string
 }
 
 var _ usecase.ChatGPTUseCase = &ChatGPTClient{}
 
 // NewChatGPTClient returns implement of usecase.ChatGPTUseCase.
-func NewChatGPTClient(client gpt3.Client, maxToken int) *ChatGPTClient {
-	return &ChatGPTClient{
+func NewChatGPTClient(client gpt3.Client, options ...ClientOption) *ChatGPTClient {
+	c := &ChatGPTClient{
 		client:   client,
-		maxToken: maxToken,
+		maxToken: 1000,
+		engine:   gpt3.TextDavinci003Engine,
 	}
+
+	for _, option := range options {
+		option.injectOption(c)
+	}
+
+	return c
 }
 
 // Stream asks ChatGPT the question and receives answer.
@@ -32,7 +40,7 @@ func (c *ChatGPTClient) Stream(ctx context.Context, question string) (<-chan str
 		defer close(res)
 		defer close(errCh)
 		err := c.client.CompletionStreamWithEngine(ctx,
-			gpt3.TextDavinci003Engine, gpt3.CompletionRequest{
+			c.engine, gpt3.CompletionRequest{
 				Prompt:      []string{question},
 				MaxTokens:   gpt3.IntPtr(c.maxToken),
 				Temperature: gpt3.Float32Ptr(0),

@@ -16,11 +16,12 @@ import (
 )
 
 var config struct {
-	telegramBotToken string
-	apiKey           string
-	maxToken         int
-	timeout          int
-	allowedUsers     []int64
+	telegramBotToken  string
+	apiKey            string
+	maxToken          int
+	completionsEngine string
+	timeout           int
+	allowedUsers      []int64
 }
 
 // Main starts process in cli.
@@ -45,7 +46,10 @@ func Main(ctx context.Context) {
 	service := chatgpttelegram.NewService(
 		bot,
 		telegram.NewTelegramBot(bot),
-		chatgpt.NewChatGPTClient(client, config.maxToken),
+		chatgpt.NewChatGPTClient(client,
+			chatgpt.WithMaxToken{MaxToken: config.maxToken},
+			chatgpt.WithCompletionsEngine{Engine: config.completionsEngine},
+		),
 	)
 
 	service.Start(ctx,
@@ -80,6 +84,13 @@ func main() {
 			Destination: &config.maxToken,
 			DefaultText: "3000",
 			Value:       3000,
+		},
+		&cli.StringFlag{
+			Name:        "chatgpt-completions-model",
+			EnvVars:     []string{"CHATGPT_COMPLETIONS_MODEL"},
+			Destination: &config.completionsEngine,
+			DefaultText: gpt3.TextDavinci003Engine,
+			Value:       gpt3.TextDavinci003Engine,
 		},
 		&cli.IntFlag{
 			Name:        "chatgpt-timeout",
